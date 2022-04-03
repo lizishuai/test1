@@ -1,0 +1,37 @@
+c = 2000; % [m/s] 波速
+dx= 5; % [m] 空间网格
+dt= .0015; % [s] 时间采样间隔
+x = 0:dx:2000; % [m] 空间采样位
+N = length(x); % [-] 空间位置点数
+T = 0:dt:0.8; % [s] 时间向量
+M = length(T); % [-] 时间步数
+r = c*dt/dx; % [-] CFL (库朗数)
+fc = 20; % [Hz] 源中心频率
+ricker = @(fm,t) (1-2*pi^2*fm^2*t.^2) .*exp(-pi^2*fm^2.*t.^2);
+fs = ricker(fc,T-0.0428);
+% 初始化网格
+[p,v] = deal( zeros(N,1) );
+% 初始化地震记录
+record = zeros(M,1)
+% 源和检波器位置
+xs = round(400/dx);
+xr = round(1400/dx);
+% 初始化计算区域
+X = 2:N-1;
+for j=3:M
+% 交错网格有限差分
+p(X+1) = -dt/dx*c^2*( 9/8*v(X) - 9/8*v(X+1) ) + p(X+1);
+% 注入源函数
+p(xs) =p(xs) + fs(j)*dt*c/dx*2;
+v(X) = -dt/dx* ( 9/8*p(X) - 9/8*p(X+1) )+ v(X);
+plot(x,p),ylim([-1 1]),title(sprintf('time
+t=%0.2f s'
+,j*dt)),xlabel('offset [m]')
+hold on
+plot(x(xr),p(xr),
+'*')
+hold off
+drawnow
+% 记录地震图
+record(j) = p(xr);
+end
